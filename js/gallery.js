@@ -1,11 +1,12 @@
 
 /**
- * Cambia la imagen principal de la galería
+ * Cambia la imagen principal de la galería y actualiza el contenido del producto
  * @param {HTMLImageElement} thumbnail - Miniatura clickeada
  */
 function toExchangeImage(thumbnail) {
     const mainImage = document.getElementById('img_main');
     const thumbnailSrc = thumbnail.src;
+    const container = thumbnail.closest('.thumbnail-container');
 
     // Animación suave de salida
     mainImage.style.opacity = '0';
@@ -22,6 +23,95 @@ function toExchangeImage(thumbnail) {
 
     // Actualizar borde activo de miniaturas
     updateActiveThumbnail(thumbnail);
+
+    // Actualizar contenido del producto si hay data attributes
+    if (container && container.dataset.productName) {
+        updateProductContent(container);
+    }
+}
+
+/**
+ * Actualiza el contenido del producto basado en los data attributes del contenedor
+ * @param {HTMLElement} container - Contenedor del thumbnail con los datos del producto
+ */
+function updateProductContent(container) {
+    const productName = container.dataset.productName;
+    const productPrice = container.dataset.productPrice;
+    const productDescription = container.dataset.productDescription;
+    const productSpecs = container.dataset.productSpecs;
+    const productDatasheet = container.dataset.productDatasheet;
+
+    // Animación de fade out para el contenido
+    const infoSection = document.querySelector('.lg\\:w-full.px-2.animate-fade-in');
+    if (infoSection) {
+        infoSection.style.opacity = '0';
+        infoSection.style.transition = 'opacity 0.2s ease';
+    }
+
+    setTimeout(() => {
+        // Actualizar nombre del producto
+        const nameElement = document.getElementById('product-name');
+        if (nameElement && productName) {
+            nameElement.textContent = productName;
+        }
+
+        // Actualizar precio del producto
+        const priceElement = document.getElementById('product-price');
+        if (priceElement && productPrice) {
+            priceElement.textContent = productPrice;
+        }
+
+        // Actualizar descripción del producto
+        const descElement = document.getElementById('product-description');
+        if (descElement && productDescription) {
+            descElement.innerHTML = `<p>${productDescription}</p>`;
+        }
+
+        // Actualizar especificaciones técnicas
+        if (productSpecs) {
+            try {
+                const specs = JSON.parse(productSpecs);
+                const specsElement = document.getElementById('product-specs');
+                if (specsElement && specs.length > 0) {
+                    specsElement.innerHTML = specs.map(spec => `
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-5 w-5 text-blue-500 mt-0.5">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-2">
+                                <p class="text-gray-700">
+                                    <span class="font-medium">${spec.label}:</span> ${spec.value}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error('Error parsing product specs:', e);
+            }
+        }
+
+        // Actualizar enlace de ficha técnica
+        const datasheetElement = document.getElementById('product-datasheet');
+        const datasheetContainer = document.getElementById('datasheet-container');
+        if (datasheetElement && datasheetContainer) {
+            if (productDatasheet && productDatasheet.trim() !== '') {
+                datasheetElement.href = productDatasheet;
+                datasheetContainer.style.display = 'flex';
+            } else {
+                // Ocultar la sección si no hay ficha técnica
+                datasheetContainer.style.display = 'none';
+            }
+        }
+
+        // Animación de fade in para el contenido
+        if (infoSection) {
+            infoSection.style.opacity = '1';
+        }
+    }, 200);
 }
 
 /**
